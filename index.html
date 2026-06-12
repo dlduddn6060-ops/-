@@ -2,15 +2,14 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>주아·초아 놀이나라 🎈</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
-html { height: -webkit-fill-available; overflow:hidden; }
+html,body { height:100%; overflow:hidden; }
 body {
-  min-height: 100vh; min-height: -webkit-fill-available; overflow:hidden;
   font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
   background:linear-gradient(160deg,#ffd9e8 0%,#d6eaff 50%,#fff3c4 100%);
   display:flex; flex-direction:column;
@@ -184,11 +183,7 @@ function saveStars(gid, n){
 
 /* ---- 사운드 (Web Audio) ---- */
 let AC = null;
-function ac(){
-  if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
-  if(AC && AC.state==='suspended'){ AC.resume(); }
-  return AC;
-}
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended')AC.resume(); return AC; }
 function tone(freq, dur, type, vol, when){
   const c = ac(); if(!c) return;
   const o = c.createOscillator(), g = c.createGain();
@@ -207,21 +202,10 @@ function sndFanfare(){ [523,659,784,1047,784,1047].forEach((f,i)=>tone(f,.18,'si
 /* ---- 말하기 (영어 발음) ---- */
 function speak(txt, lang){
   try{
-    const doSpeak = ()=>{
-      const u = new SpeechSynthesisUtterance(txt);
-      u.lang = lang||'en-US'; u.rate = 0.8; u.pitch = 1.1;
-      speechSynthesis.speak(u);
-    };
-    // iOS requires voices to be loaded first
-    const voices = speechSynthesis.getVoices();
-    if(voices.length > 0){
-      speechSynthesis.cancel();
-      setTimeout(doSpeak, 50);
-    } else {
-      speechSynthesis.onvoiceschanged = ()=>{ speechSynthesis.cancel(); setTimeout(doSpeak, 50); };
-      // fallback if onvoiceschanged never fires (iOS quirk)
-      setTimeout(()=>{ if(speechSynthesis.getVoices().length===0) doSpeak(); }, 500);
-    }
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(txt);
+    u.lang = lang||'en-US'; u.rate = 0.8; u.pitch = 1.1;
+    speechSynthesis.speak(u);
   }catch(e){}
 }
 
@@ -771,16 +755,7 @@ games.push({
 
 /* ================= 시작! ================= */
 renderHome();
-// iOS: unlock AudioContext + preload voices on first touch
-document.body.addEventListener('touchstart', ()=>{
-  ac();
-  // warm up speechSynthesis
-  if(typeof speechSynthesis !== 'undefined'){
-    const warm = new SpeechSynthesisUtterance('');
-    speechSynthesis.speak(warm);
-    speechSynthesis.cancel();
-  }
-}, {once:true});
+document.body.addEventListener('touchstart', ()=>ac(), {once:true});
 </script>
 </body>
 </html>
