@@ -2,14 +2,15 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>주아·초아 놀이나라 🎈</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
-html,body { height:100%; overflow:hidden; }
+html { height: -webkit-fill-available; overflow:hidden; }
 body {
+  min-height: 100vh; min-height: -webkit-fill-available; overflow:hidden;
   font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
   background:linear-gradient(160deg,#ffd9e8 0%,#d6eaff 50%,#fff3c4 100%);
   display:flex; flex-direction:column;
@@ -27,7 +28,7 @@ body {
 .title-sm { font-size:19px; font-weight:800; color:#5b4a6e; }
 
 /* ===== 홈 화면 ===== */
-.home { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.home { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
 .home-head { text-align:center; padding:16px 10px 6px; }
 .home-head h1 { font-size:28px; color:#7a4ddb; text-shadow:2px 2px 0 #fff; letter-spacing:1px; }
 .home-head p { font-size:14px; color:#9a8bb0; margin-top:4px; font-weight:700; }
@@ -46,8 +47,9 @@ body {
 .profile.sel-cho { border-color:#4dabf7; background:#eaf6ff; }
 
 .gamegrid {
-  flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
-  display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:6px 14px 24px;
+  flex:1; overflow-y:scroll; -webkit-overflow-scrolling:touch;
+  display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:6px 14px 48px;
+  min-height:0;
 }
 .gcard {
   border:none; border-radius:22px; padding:16px 8px 14px; text-align:center; cursor:pointer;
@@ -183,7 +185,11 @@ function saveStars(gid, n){
 
 /* ---- 사운드 (Web Audio) ---- */
 let AC = null;
-function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended')AC.resume(); return AC; }
+function ac(){
+  if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(AC && AC.state==='suspended'){ AC.resume(); }
+  return AC;
+}
 function tone(freq, dur, type, vol, when){
   const c = ac(); if(!c) return;
   const o = c.createOscillator(), g = c.createGain();
@@ -202,10 +208,21 @@ function sndFanfare(){ [523,659,784,1047,784,1047].forEach((f,i)=>tone(f,.18,'si
 /* ---- 말하기 (영어 발음) ---- */
 function speak(txt, lang){
   try{
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(txt);
-    u.lang = lang||'en-US'; u.rate = 0.8; u.pitch = 1.1;
-    speechSynthesis.speak(u);
+    const doSpeak = ()=>{
+      const u = new SpeechSynthesisUtterance(txt);
+      u.lang = lang||'en-US'; u.rate = 0.8; u.pitch = 1.1;
+      speechSynthesis.speak(u);
+    };
+    // iOS requires voices to be loaded first
+    const voices = speechSynthesis.getVoices();
+    if(voices.length > 0){
+      speechSynthesis.cancel();
+      setTimeout(doSpeak, 50);
+    } else {
+      speechSynthesis.onvoiceschanged = ()=>{ speechSynthesis.cancel(); setTimeout(doSpeak, 50); };
+      // fallback if onvoiceschanged never fires (iOS quirk)
+      setTimeout(()=>{ if(speechSynthesis.getVoices().length===0) doSpeak(); }, 500);
+    }
   }catch(e){}
 }
 
@@ -755,7 +772,16 @@ games.push({
 
 /* ================= 시작! ================= */
 renderHome();
-document.body.addEventListener('touchstart', ()=>ac(), {once:true});
+// iOS: unlock AudioContext + preload voices on first touch
+document.body.addEventListener('touchstart', ()=>{
+  ac();
+  // warm up speechSynthesis
+  if(typeof speechSynthesis !== 'undefined'){
+    const warm = new SpeechSynthesisUtterance('');
+    speechSynthesis.speak(warm);
+    speechSynthesis.cancel();
+  }
+}, {once:true});
 </script>
 </body>
 </html>
