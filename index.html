@@ -8,14 +8,15 @@
 <title>주아·초아 놀이나라 🎈</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
-html { height: -webkit-fill-available; overflow:hidden; }
+html,body { height:100%; overflow:hidden; }
+/* 아이폰 사파리: 주소창/하단바에 가려지지 않게 실제 보이는 높이 사용 */
+@supports (height:100dvh){ html,body{ height:100dvh; } }
 body {
-  min-height: 100vh; min-height: -webkit-fill-available; overflow:hidden;
   font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
   background:linear-gradient(160deg,#ffd9e8 0%,#d6eaff 50%,#fff3c4 100%);
   display:flex; flex-direction:column;
 }
-#app { flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative; }
+#app { flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative; padding-bottom:env(safe-area-inset-bottom, 0px); }
 #fx { position:fixed; inset:0; pointer-events:none; z-index:999; }
 
 /* ===== 헤더 ===== */
@@ -28,7 +29,7 @@ body {
 .title-sm { font-size:19px; font-weight:800; color:#5b4a6e; }
 
 /* ===== 홈 화면 ===== */
-.home { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
+.home { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 .home-head { text-align:center; padding:16px 10px 6px; }
 .home-head h1 { font-size:28px; color:#7a4ddb; text-shadow:2px 2px 0 #fff; letter-spacing:1px; }
 .home-head p { font-size:14px; color:#9a8bb0; margin-top:4px; font-weight:700; }
@@ -47,9 +48,10 @@ body {
 .profile.sel-cho { border-color:#4dabf7; background:#eaf6ff; }
 
 .gamegrid {
-  flex:1; overflow-y:scroll; -webkit-overflow-scrolling:touch;
-  display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:6px 14px 48px;
-  min-height:0;
+  flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+  /* 아래 여백을 넉넉히: 마지막 게임이 하단바에 안 가리고 스크롤이 더 내려가게 */
+  padding:6px 14px calc(170px + env(safe-area-inset-bottom, 0px));
 }
 .gcard {
   border:none; border-radius:22px; padding:16px 8px 14px; text-align:center; cursor:pointer;
@@ -102,6 +104,7 @@ body {
 }
 .balloon::after { content:""; position:absolute; bottom:-26px; left:50%; width:2px; height:26px; background:rgba(90,70,110,.4); }
 .balloon:nth-child(2){ animation-delay:.4s; } .balloon:nth-child(3){ animation-delay:.9s; }
+.balloon:nth-child(4){ animation-delay:1.3s; } .balloon:nth-child(5){ animation-delay:1.7s; }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
 .popping { animation:popout .28s forwards !important; }
 @keyframes popout { 60%{transform:scale(1.35); opacity:1;} 100%{transform:scale(0); opacity:0;} }
@@ -140,6 +143,30 @@ body {
 .candy:active{ transform:scale(1.25); }
 .candy.got { transform:scale(0); opacity:0; transition:all .25s; }
 
+/* ===== 드래그 게임 ===== */
+.draggy { touch-action:none; cursor:grab; position:relative; z-index:5; }
+.draggy.dragging { z-index:90; }
+.dragitem {
+  background:none; border:none; font-size:50px; line-height:1;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.18));
+}
+.dragchip {
+  background:#fff; border:none; border-radius:20px; padding:10px 16px;
+  font-size:24px; font-weight:900; color:#3b5b8c; box-shadow:0 4px 0 rgba(0,0,0,.13);
+  display:flex; align-items:center; gap:6px;
+}
+.dz {
+  border:4px dashed #b9a7e0; border-radius:24px; background:rgba(255,255,255,.6);
+  min-width:104px; min-height:96px; padding:8px 12px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  font-weight:900; color:#7a4ddb; font-size:20px; text-align:center;
+}
+.dz .dzi { font-size:38px; line-height:1.15; }
+.dz.glow { border-color:#51cf66; background:#ebfbee; animation:dzpulse .5s; }
+@keyframes dzpulse { 50%{ transform:scale(1.08);} }
+.dzrow { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; width:100%; }
+.dragrow { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; width:100%; padding:6px; }
+
 /* 결과 화면 */
 .endwrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:20px; text-align:center; }
 .endwrap .bigstar { font-size:64px; letter-spacing:6px; animation:bounce 1s infinite alternate; }
@@ -152,15 +179,12 @@ body {
 }
 .bigbtn:active{ transform:scale(.95); }
 .bb-purple{ background:#9775fa; } .bb-pink{ background:#ff7bac; } .bb-blue{ background:#4dabf7; }
+.bb-green{ background:#40c057; }
 
 /* 타이머/점수 */
 .hud { display:flex; gap:10px; align-items:center; justify-content:center; padding-bottom:6px; }
 .hudbox { background:#fff; border-radius:16px; padding:6px 16px; font-size:18px; font-weight:900; color:#5b4a6e; box-shadow:0 3px 0 rgba(0,0,0,.1); }
 
-.feedback-big {
-  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-  font-size:80px; pointer-events:none; z-index:50; animation:popout .8s reverse;
-}
 .speakbtn {
   background:#fff; border:none; border-radius:50%; width:62px; height:62px; font-size:30px;
   box-shadow:0 4px 0 rgba(0,0,0,.12); cursor:pointer;
@@ -185,11 +209,7 @@ function saveStars(gid, n){
 
 /* ---- 사운드 (Web Audio) ---- */
 let AC = null;
-function ac(){
-  if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
-  if(AC && AC.state==='suspended'){ AC.resume(); }
-  return AC;
-}
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended')AC.resume(); return AC; }
 function tone(freq, dur, type, vol, when){
   const c = ac(); if(!c) return;
   const o = c.createOscillator(), g = c.createGain();
@@ -205,26 +225,39 @@ function sndWrong(){ tone(220,.25,'sawtooth',.12); tone(180,.3,'sawtooth',.10,.0
 function sndTap(){ tone(660,.07,'square',.12); }
 function sndFanfare(){ [523,659,784,1047,784,1047].forEach((f,i)=>tone(f,.18,'sine',.22,i*.13)); }
 
-/* ---- 말하기 (영어 발음) ---- */
-function speak(txt, lang){
+/* ---- 말하기 (좋은 목소리 고르기 + 한국어 지문 읽어주기) ---- */
+let enVoice = null, koVoice = null;
+function loadVoices(){
   try{
-    const doSpeak = ()=>{
-      const u = new SpeechSynthesisUtterance(txt);
-      u.lang = lang||'en-US'; u.rate = 0.8; u.pitch = 1.1;
-      speechSynthesis.speak(u);
-    };
-    // iOS requires voices to be loaded first
-    const voices = speechSynthesis.getVoices();
-    if(voices.length > 0){
-      speechSynthesis.cancel();
-      setTimeout(doSpeak, 50);
-    } else {
-      speechSynthesis.onvoiceschanged = ()=>{ speechSynthesis.cancel(); setTimeout(doSpeak, 50); };
-      // fallback if onvoiceschanged never fires (iOS quirk)
-      setTimeout(()=>{ if(speechSynthesis.getVoices().length===0) doSpeak(); }, 500);
-    }
+    const vs = speechSynthesis.getVoices();
+    const score = v => (/Google/i.test(v.name)?4:0) + (/Natural|Premium|Enhanced|Neural|Siri/i.test(v.name)?5:0) + (/Samantha|Aria|Jenny|Ava|Allison/i.test(v.name)?2:0);
+    const en = vs.filter(v=>/^en[-_]US/i.test(v.lang)).sort((a,b)=>score(b)-score(a));
+    enVoice = en[0] || vs.find(v=>/^en/i.test(v.lang)) || null;
+    const ko = vs.filter(v=>/^ko/i.test(v.lang)).sort((a,b)=>score(b)-score(a));
+    koVoice = ko[0] || null;
   }catch(e){}
 }
+try{ speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); }catch(e){}
+function speak(txt){ /* 영어: 또박또박 천천히, 줄 서서 차례로 말함 */
+  try{
+    if(!enVoice) loadVoices();
+    const u = new SpeechSynthesisUtterance(txt);
+    u.lang = 'en-US'; if(enVoice) u.voice = enVoice;
+    u.rate = 0.72; u.pitch = 1.05; u.volume = 1;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function speakKo(txt){ /* 한국어 지문: 하던 말 멈추고 바로 읽어줌 */
+  try{
+    if(!koVoice) loadVoices();
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(txt);
+    u.lang = 'ko-KR'; if(koVoice) u.voice = koVoice;
+    u.rate = 0.95; u.volume = 1;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+const KO_NUM = ['하나','둘','셋','넷','다섯','여섯','일곱','여덟','아홉','열'];
 
 /* ---- 파티클 (팡팡 효과) ---- */
 const fxc = document.getElementById('fx'), fxx = fxc.getContext('2d');
@@ -272,6 +305,43 @@ function burstAt(el, big){
   burst(r.left+r.width/2, r.top+r.height/2, big?40:26, big);
 }
 
+/* ---- 드래그 도우미 (손가락으로 끌기) ---- */
+function makeDrag(elm, zonesFn, onDrop){
+  elm.classList.add('draggy');
+  let drag = false, sx = 0, sy = 0;
+  elm.addEventListener('pointerdown', e=>{
+    if(elm.dataset.dead) return;
+    e.preventDefault();
+    drag = true; sx = e.clientX; sy = e.clientY;
+    try{ elm.setPointerCapture(e.pointerId); }catch(err){}
+    elm.classList.add('dragging');
+    elm.style.transition = 'none';
+    sndTap();
+  });
+  elm.addEventListener('pointermove', e=>{
+    if(!drag) return;
+    elm.style.transform = 'translate('+(e.clientX-sx)+'px,'+(e.clientY-sy)+'px) scale(1.15)';
+  });
+  function finish(e, cancelled){
+    if(!drag) return; drag = false;
+    elm.classList.remove('dragging');
+    let consumed = false;
+    if(!cancelled){
+      const hit = zonesFn().find(z=>{
+        const r = z.getBoundingClientRect();
+        return e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom;
+      });
+      consumed = onDrop(hit||null, elm);
+    }
+    if(!consumed){
+      elm.style.transition = 'transform .3s';
+      elm.style.transform = '';
+    }
+  }
+  elm.addEventListener('pointerup', e=>finish(e,false));
+  elm.addEventListener('pointercancel', e=>finish(e,true));
+}
+
 /* ---- 유틸 ---- */
 const ri = (a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const pick = arr=>arr[Math.floor(Math.random()*arr.length)];
@@ -279,13 +349,13 @@ function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.fl
 function el(tag, cls, html){ const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
 
 /* ================= 게임 프레임워크 ================= */
-const ROUNDS = 10;
 const games = [];
 
-function goHome(){ renderHome(); }
+function goHome(){ try{ speechSynthesis.cancel(); }catch(e){} renderHome(); }
 
 function startGame(g){
   ac();
+  const R = g.rounds || 10;
   let round = 0, correct = 0, results = [];
   $app.innerHTML = '';
   const top = el('div','topbar');
@@ -296,7 +366,7 @@ function startGame(g){
   top.appendChild(el('div','', '<div style="width:48px"></div>'));
   $app.appendChild(top);
   const prog = el('div','progress');
-  for(let i=0;i<ROUNDS;i++) prog.appendChild(el('div','pdot'+(i===0?' cur':'')));
+  for(let i=0;i<R;i++) prog.appendChild(el('div','pdot'+(i===0?' cur':'')));
   $app.appendChild(prog);
   const stage = el('div','stage');
   $app.appendChild(stage);
@@ -310,17 +380,17 @@ function startGame(g){
     results[round] = ok; if(ok) correct++;
     round++;
     updateProg();
-    if(round>=ROUNDS){ setTimeout(()=>endScreen(), 600); }
+    if(round>=R){ setTimeout(()=>endScreen(), 600); }
     else setTimeout(()=>{ stage.innerHTML=''; g.round(stage, ctx); }, 650);
   }
   function endScreen(){
-    const stars = correct>=9?3:correct>=6?2:1;
+    const stars = correct>=R*0.85?3:correct>=R*0.55?2:1;
     saveStars(g.id, stars);
     stage.remove(); prog.remove();
     const w = el('div','endwrap');
     w.appendChild(el('div','bigstar', '⭐'.repeat(stars)));
-    w.appendChild(el('h2','', correct>=9?'와! 최고야!! 🎉':correct>=6?'정말 잘했어! 👏':'재밌게 놀았네! 😊'));
-    w.appendChild(el('div','msg', ROUNDS+'문제 중에 <b style="color:#ff7bac">'+correct+'개</b> 성공!'));
+    w.appendChild(el('h2','', stars===3?'와! 최고야!! 🎉':stars===2?'정말 잘했어! 👏':'재밌게 놀았네! 😊'));
+    w.appendChild(el('div','msg', R+'문제 중에 <b style="color:#ff7bac">'+correct+'개</b> 성공!'));
     const b1 = el('button','bigbtn bb-pink','한 번 더! 🔄');
     b1.onclick = ()=>{ sndTap(); startGame(g); };
     const b2 = el('button','bigbtn bb-purple','다른 게임 하기 🏠');
@@ -328,11 +398,12 @@ function startGame(g){
     w.appendChild(b1); w.appendChild(b2);
     $app.appendChild(w);
     sndFanfare(); fireworks();
+    speakKo(stars===3?'와, 최고야! 별 세 개!':stars===2?'정말 잘했어!':'재밌게 잘 놀았어!');
   }
   /* 게임이 쓰는 도구 모음 */
   const ctx = {
-    mode, next, sndPop, sndGood, sndWrong, sndTap, burstAt, burst, speak, ri, pick, shuffle, el,
-    /* 공통: 보기 버튼들 (정답 1개) — 정답시 팡! */
+    mode, next, sndPop, sndGood, sndWrong, sndTap, burstAt, burst, speak, say:speakKo, makeDrag,
+    ri, pick, shuffle, el,
     choiceRow(stage, choices, onDone){
       const row = el('div','choices');
       shuffle(choices).forEach((c,i)=>{
@@ -355,15 +426,6 @@ function startGame(g){
       });
       stage.appendChild(row);
       return row;
-    },
-    /* 한번 틀려도 기회 계속, 최종 맞으면 round 종료. firstTry 기준으로 채점 */
-    mc(stage, promptHTML, answers){
-      stage.appendChild(el('div','prompt', promptHTML));
-      let firstTry = true;
-      ctx.choiceRow(stage, answers, ok=>{
-        if(ok) next(firstTry);
-        else firstTry = false;
-      });
     }
   };
   g.round(stage, ctx);
@@ -383,8 +445,8 @@ function renderHome(){
     '<div class="pic">👧</div><div class="nm">주아 언니</div><div class="sub">6살 · 어려운 문제!</div>');
   const p2 = el('div','profile'+(mode==='cho'?' sel-cho':''),
     '<div class="pic">👶</div><div class="nm">초아</div><div class="sub">4살 · 신나는 문제!</div>');
-  p1.onclick = ()=>{ mode='uni'; sndTap(); renderHome(); };
-  p2.onclick = ()=>{ mode='cho'; sndTap(); renderHome(); };
+  p1.onclick = ()=>{ mode='uni'; sndTap(); speakKo('주아 언니, 어떤 게임 할까?'); renderHome(); };
+  p2.onclick = ()=>{ mode='cho'; sndTap(); speakKo('초아야, 어떤 게임 할까?'); renderHome(); };
   profs.appendChild(p1); profs.appendChild(p2);
   home.appendChild(profs);
 
@@ -438,25 +500,64 @@ function nearWrong(ans, ctx){
   }
   return [...s].map(v=>({label:v, correct:v===ans}));
 }
+/* 주아용: 1의 자리·10의 자리 섞인 문제 만들기 */
+function mixedProblem(ctx){
+  const style = ctx.pick(['2d1d','2d1d','1d1d','2d2d']);
+  let a, b;
+  if(style==='1d1d'){ a=ctx.ri(3,9); b=ctx.ri(2,9); }
+  else if(style==='2d1d'){ a=ctx.ri(11,79); b=ctx.ri(2,9); }
+  else { a=ctx.ri(11,55); b=ctx.ri(11,40); }
+  let op = Math.random()<0.5 ? '+' : '−';
+  if(op==='−' && b>a){ const t=a; a=b; b=t; }
+  const ans = op==='+' ? a+b : a-b;
+  return {a, b, op, ans, koOp: op==='+'?'더하기':'빼기'};
+}
 const CNT_EMOJI = ['🍎','🍓','🐤','🐟','🌟','🧁','🐞','🎈','🍩','🐰'];
 
 /* 1. 풍선 팡팡 */
 games.push({
-  id:'balloon', name:'풍선 팡팡', icon:'🎈', tag:'정답 풍선을 터뜨려!', color:'linear-gradient(135deg,#ff8fab,#ff6b8a)',
+  id:'balloon', name:'풍선 팡팡', icon:'🎈', tag:'펑펑 터뜨려!', color:'linear-gradient(135deg,#ff8fab,#ff6b8a)',
   round(stage, ctx){
     if(ctx.mode==='uni'){
-      let a,b,op,ans;
-      if(Math.random()<0.5){ a=ctx.ri(11,69); b=ctx.ri(11, 99-a); op='+'; ans=a+b; }
-      else { a=ctx.ri(20,99); b=ctx.ri(11,a-1); op='−'; ans=a-b; }
-      stage.appendChild(el('div','prompt','<div class="big">'+a+' '+op+' '+b+' = ?</div>'));
+      const p = mixedProblem(ctx);
+      stage.appendChild(el('div','prompt','<div class="big">'+p.a+' '+p.op+' '+p.b+' = ?</div><div class="hint">정답 풍선을 터뜨려!</div>'));
+      ctx.say(p.a+' '+p.koOp+' '+p.b+'는 얼마일까? 정답 풍선을 팡 터뜨려 봐!');
       let first=true;
-      balloonRow(stage, nearWrong(ans,ctx), ctx, ok=>{ if(ok)ctx.next(first); else first=false; });
+      balloonRow(stage, nearWrong(p.ans,ctx), ctx, ok=>{ if(ok)ctx.next(first); else first=false; });
     } else {
-      const n = ctx.ri(1,9), e = ctx.pick(CNT_EMOJI);
-      stage.appendChild(el('div','prompt','<div class="emo">'+e.repeat(n)+'</div><div class="hint">몇 개일까? 세어보자!</div>'));
-      const s = new Set([n]); while(s.size<3) s.add(Math.max(1, n+ctx.pick([-2,-1,1,2])));
-      let first=true;
-      balloonRow(stage, [...s].map(v=>({label:v,correct:v===n})), ctx, ok=>{ if(ok)ctx.next(first); else first=false; });
+      /* 초아: 풍선을 다 터뜨리고 → 몇 개 터뜨렸는지 세기 */
+      const n = ctx.ri(1,5);
+      const p = el('div','prompt','<div class="mid">풍선을 모두 팡팡! 🎈</div><div class="hint">터뜨리면서 같이 세어보자</div>');
+      stage.appendChild(p);
+      ctx.say('풍선을 하나씩 다 터뜨려 봐! 같이 세어 보자!');
+      const row = el('div','choices');
+      let popped = 0;
+      for(let i=0;i<n;i++){
+        const b = el('button','balloon','');
+        b.style.background = BALLOON_COLORS[i%BALLOON_COLORS.length];
+        b.onclick = ()=>{
+          if(b.dataset.dead) return;
+          b.dataset.dead = 1;
+          popped++;
+          sndPop(); ctx.burstAt(b, true);
+          b.classList.add('popping');
+          speakKo(KO_NUM[popped-1]+'!');
+          if(popped===n){
+            setTimeout(()=>{
+              p.innerHTML = '<div class="mid">몇 개 터뜨렸지? 🤔</div>';
+              speakKo('우와, 다 터뜨렸다! 풍선을 몇 개 터뜨렸을까?');
+              const s = new Set([n]); while(s.size<3) s.add(Math.max(1, Math.min(6, n+ctx.pick([-2,-1,1,2]))));
+              let first = true;
+              row.remove();
+              ctx.choiceRow(stage, [...s].map(v=>({label:v,correct:v===n})), ok=>{
+                if(ok){ speakKo(KO_NUM[n-1]+' 개! 딩동댕!'); ctx.next(first); } else first=false;
+              });
+            }, 700);
+          }
+        };
+        row.appendChild(b);
+      }
+      stage.appendChild(row);
     }
   }
 });
@@ -473,14 +574,18 @@ games.push({
         else { const d=ctx.ri(1,6); total+=d; expr+=' + '+d; }
       }
       stage.appendChild(el('div','prompt','<div class="big">🚂 '+expr+' = ?</div><div class="hint">앞에서부터 차례차례!</div>'));
+      ctx.say(expr.replace(/\+/g,'더하기').replace(/−/g,'빼기')+'는 얼마일까? 앞에서부터 차례차례 계산해 봐!');
       let first=true;
       ctx.choiceRow(stage, nearWrong(total,ctx), ok=>{ if(ok)ctx.next(first); else first=false; });
     } else {
-      const a = ctx.ri(1,3), b = ctx.ri(1,2), e = ctx.pick(CNT_EMOJI), ans = a+b;
+      const a = ctx.ri(1,2), b = ctx.ri(1,2), e = ctx.pick(CNT_EMOJI), ans = a+b;
       stage.appendChild(el('div','prompt','<div class="emo">'+e.repeat(a)+' ➕ '+e.repeat(b)+'</div><div class="hint">모두 합치면 몇 개?</div>'));
+      ctx.say('그림을 손가락으로 세어 봐. 모두 합치면 몇 개일까?');
       const s = new Set([ans]); while(s.size<3) s.add(Math.max(1, ans+ctx.pick([-1,1,2])));
       let first=true;
-      ctx.choiceRow(stage, [...s].map(v=>({label:v,correct:v===ans})), ok=>{ if(ok)ctx.next(first); else first=false; });
+      ctx.choiceRow(stage, [...s].map(v=>({label:v,correct:v===ans})), ok=>{
+        if(ok){ speakKo(KO_NUM[ans-1]+' 개! 딩동댕!'); ctx.next(first); } else first=false;
+      });
     }
   }
 });
@@ -490,21 +595,23 @@ games.push({
   id:'compare', name:'누가 더 클까', icon:'⚖️', tag:'더 큰 쪽을 골라!', color:'linear-gradient(135deg,#69db7c,#40c057)',
   round(stage, ctx){
     if(ctx.mode==='uni'){
-      function mk(){ const a=ctx.ri(5,40), b=ctx.ri(2,30); return Math.random()<0.5? {t:a+' + '+b, v:a+b} : (a>b? {t:a+' − '+b, v:a-b} : {t:b+' − '+a, v:b-a}); }
+      function mk(){ const a=ctx.ri(5,40), b=ctx.ri(2,9); return Math.random()<0.5? {t:a+' + '+b, v:a+b} : {t:a+' − '+b, v:a-b}; }
       let L=mk(), R=mk(); let guard=0;
       while(L.v===R.v && guard++<20) R=mk();
       stage.appendChild(el('div','prompt','<div class="mid">어느 쪽이 더 클까?</div>'));
+      ctx.say('두 개를 계산해 보고, 더 큰 쪽을 골라 봐!');
       const ans = L.v>R.v ? 'L':'R';
       let first=true;
       ctx.choiceRow(stage, [{label:L.t, correct:ans==='L'},{label:R.t, correct:ans==='R'}], ok=>{ if(ok)ctx.next(first); else first=false; });
     } else {
       const e1=ctx.pick(CNT_EMOJI); let e2=ctx.pick(CNT_EMOJI); while(e2===e1) e2=ctx.pick(CNT_EMOJI);
-      let n1=ctx.ri(1,6), n2=ctx.ri(1,6); while(n2===n1) n2=ctx.ri(1,6);
+      let n1=ctx.ri(1,4), n2=ctx.ri(1,4); while(n2===n1) n2=ctx.ri(1,4);
       stage.appendChild(el('div','prompt','<div class="mid">어느 쪽이 더 많을까?</div>'));
+      ctx.say('어느 쪽이 더 많을까? 많은 쪽을 콕 눌러 봐!');
       let first=true;
       ctx.choiceRow(stage, [
-        {label:'<span style="font-size:26px">'+e1.repeat(n1)+'</span>', correct:n1>n2},
-        {label:'<span style="font-size:26px">'+e2.repeat(n2)+'</span>', correct:n2>n1}
+        {label:'<span style="font-size:30px">'+e1.repeat(n1)+'</span>', correct:n1>n2},
+        {label:'<span style="font-size:30px">'+e2.repeat(n2)+'</span>', correct:n2>n1}
       ], ok=>{ if(ok)ctx.next(first); else first=false; });
     }
   }
@@ -515,18 +622,28 @@ games.push({
   id:'missing', name:'빠진 숫자', icon:'🔍', tag:'숨은 숫자를 찾아라!', color:'linear-gradient(135deg,#ffa94d,#ff922b)',
   round(stage, ctx){
     if(ctx.mode==='uni'){
-      let html, ans;
-      if(Math.random()<0.5){ const a=ctx.ri(5,50), b=ctx.ri(3,40), c=a+b; ans=b; html=a+' + <span style="color:#ff7bac">❓</span> = '+c; }
-      else { const c=ctx.ri(20,80), b=ctx.ri(3,c-5), a=c+b; ans=b; html=a+' − <span style="color:#ff7bac">❓</span> = '+c; }
+      let html, ans, say;
+      const oneDigit = Math.random()<0.5;
+      if(Math.random()<0.5){
+        const a=oneDigit?ctx.ri(2,9):ctx.ri(11,50), b=oneDigit?ctx.ri(2,9):ctx.ri(3,30), c=a+b;
+        ans=b; html=a+' + <span style="color:#ff7bac">❓</span> = '+c;
+        say=a+' 더하기 몇이 '+c+'가 될까?';
+      } else {
+        const c=oneDigit?ctx.ri(2,9):ctx.ri(15,60), b=oneDigit?ctx.ri(1,8):ctx.ri(3,20), a=c+b;
+        ans=b; html=a+' − <span style="color:#ff7bac">❓</span> = '+c;
+        say=a+' 빼기 몇이 '+c+'가 될까?';
+      }
       stage.appendChild(el('div','prompt','<div class="big">'+html+'</div><div class="hint">❓에 들어갈 숫자는?</div>'));
+      ctx.say(say);
       let first=true;
       ctx.choiceRow(stage, nearWrong(ans,ctx), ok=>{ if(ok)ctx.next(first); else first=false; });
     } else {
-      const start = ctx.ri(1,6), miss = ctx.ri(1,2);
+      const start = ctx.ri(1,3), miss = ctx.ri(1,2);
       const seq = [start,start+1,start+2,start+3];
       const ans = seq[miss];
       const html = seq.map((v,i)=>i===miss?'<span style="color:#ff7bac">❓</span>':v).join('&nbsp; ');
       stage.appendChild(el('div','prompt','<div class="big">'+html+'</div><div class="hint">❓는 무슨 숫자일까?</div>'));
+      ctx.say('숫자 친구들이 순서대로 서 있어. 물음표 자리에 올 숫자는 뭘까?');
       const s = new Set([ans]); while(s.size<3) s.add(Math.max(1,ans+ctx.pick([-2,-1,1,2])));
       let first=true;
       ctx.choiceRow(stage, [...s].map(v=>({label:v,correct:v===ans})), ok=>{ if(ok)ctx.next(first); else first=false; });
@@ -539,36 +656,36 @@ games.push({
   id:'candy', name:'사탕 가게', icon:'🍭', tag:'맛있는 수학 놀이!', color:'linear-gradient(135deg,#f783ac,#e64980)',
   round(stage, ctx){
     if(ctx.mode==='uni'){
-      const items=[['🍭',ctx.ri(11,45)],['🍪',ctx.ri(11,45)]];
-      const ans = items[0][1]+items[1][1];
+      const p1 = ctx.ri(11,40), p2 = Math.random()<0.5 ? ctx.ri(2,9) : ctx.ri(11,40);
+      const ans = p1+p2;
       stage.appendChild(el('div','prompt',
-        '<div class="emo">'+items[0][0]+' <b style="font-size:26px">'+items[0][1]+'원</b> &nbsp; '+items[1][0]+' <b style="font-size:26px">'+items[1][1]+'원</b></div>'+
+        '<div class="emo">🍭 <b style="font-size:26px">'+p1+'원</b> &nbsp; 🍪 <b style="font-size:26px">'+p2+'원</b></div>'+
         '<div class="hint">둘 다 사면 모두 얼마일까?</div>'));
+      ctx.say('사탕은 '+p1+'원, 과자는 '+p2+'원이야. 둘 다 사면 모두 얼마일까?');
       let first=true;
       ctx.choiceRow(stage, nearWrong(ans,ctx).map(c=>({label:c.label+'원',correct:c.correct})), ok=>{ if(ok)ctx.next(first); else first=false; });
     } else {
-      const want = ctx.ri(2,6), e = ctx.pick(['🍭','🍬','🧁','🍩','🍪']);
+      const want = ctx.ri(2,4), e = ctx.pick(['🍭','🍬','🧁','🍩','🍪']);
       stage.appendChild(el('div','prompt','<div class="mid">'+e+' <b style="color:#e64980">'+want+'개</b>만 골라줘!</div><div class="hint">하나씩 콕콕 눌러봐</div>'));
+      ctx.say('맛있는 거 '+want+'개만 골라 줘! 하나씩 콕콕 누르면서 세어 보자!');
       const tray = el('div','choices');
-      let got = 0, over = false;
-      const total = want + ctx.ri(3,5);
+      let got = 0, done = false;
+      const total = want + ctx.ri(3,4);
       const cnt = el('div','hudbox','0 / '+want);
       for(let i=0;i<total;i++){
         const c = el('button','candy', e);
         c.onclick = ()=>{
-          if(c.dataset.dead||over) return;
+          if(c.dataset.dead||done) return;
           c.dataset.dead=1;
           got++;
           sndPop(); ctx.burstAt(c);
           c.classList.add('got');
           cnt.textContent = got+' / '+want;
+          speakKo(KO_NUM[got-1]+'!');
           if(got===want){
-            over = true;
+            done = true;
             sndGood();
-            setTimeout(()=>ctx.next(true), 400);
-          } else if(got>want){
-            over = true; sndWrong();
-            setTimeout(()=>ctx.next(false), 400);
+            setTimeout(()=>{ speakKo('딱 맞았어! 잘했어!'); ctx.next(true); }, 500);
           }
         };
         tray.appendChild(c);
@@ -589,12 +706,10 @@ const WORDS = [
   ['grape','🍇'],['train','🚆'],['mouse','🐭'],['house','🏠']
 ];
 const AZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-function pickWords(ctx, n){
-  const s = ctx.shuffle(WORDS); return s.slice(0,n);
-}
+function pickWords(ctx, n){ return ctx.shuffle(WORDS).slice(0,n); }
 function speakBtn(word, ctx){
   const b = el('button','speakbtn','🔊');
-  b.onclick = ()=>{ ctx.sndTap(); ctx.speak(word); };
+  b.onclick = ()=>{ ctx.sndTap(); try{speechSynthesis.cancel();}catch(e){} ctx.speak(word); };
   return b;
 }
 
@@ -606,6 +721,8 @@ games.push({
       const [word, emo] = ctx.pick(WORDS.filter(w=>w[0].length<=4));
       const p = el('div','prompt','<div class="emo">'+emo+'</div><div class="big" id="spellword"></div><div class="hint">글자를 순서대로 눌러봐!</div>');
       stage.appendChild(p);
+      ctx.say('글자 비눗방울을 순서대로 눌러서 단어를 완성해 봐!');
+      ctx.speak(word);
       const wd = p.querySelector('#spellword');
       const update = i=>{ wd.innerHTML = word.toUpperCase().split('').map((ch,k)=>k<i?'<span style="color:#3bc9db">'+ch+'</span>':'<span style="color:#ddd">'+ch+'</span>').join(''); };
       update(0);
@@ -631,6 +748,7 @@ games.push({
     } else {
       const target = AZ[ctx.ri(0,25)];
       stage.appendChild(el('div','prompt','<div class="big" style="color:#3bc9db">'+target+'</div><div class="hint">같은 글자 비눗방울을 팡!</div>'));
+      ctx.say('위에 있는 글자랑 똑같은 비눗방울을 찾아서 팡 터뜨려 봐!');
       ctx.speak(target);
       const s = new Set([target]); while(s.size<4) s.add(AZ[ctx.ri(0,25)]);
       const row = el('div','choices');
@@ -662,10 +780,12 @@ games.push({
       const p = el('div','prompt','<div class="big" style="color:#9775fa">'+answer[0]+'</div><div class="hint">읽어보고 맞는 그림을 골라!</div>');
       stage.appendChild(p);
       stage.appendChild(speakBtn(answer[0], ctx));
+      ctx.say('단어를 읽어 보고, 맞는 그림을 골라 봐! 모르겠으면 스피커를 눌러 봐.');
     } else {
       stage.appendChild(el('div','prompt','<div class="emo">👂</div><div class="hint">잘 듣고 맞는 그림을 골라!</div>'));
       stage.appendChild(speakBtn(answer[0], ctx));
-      setTimeout(()=>ctx.speak(answer[0]), 400);
+      ctx.say('지금 들리는 영어가 어떤 그림인지 골라 봐!');
+      setTimeout(()=>ctx.speak(answer[0]), 2500);
     }
     ctx.choiceRow(stage, three.map(w=>({label:'<span style="font-size:44px">'+w[1]+'</span>', correct:w===answer})), ok=>{
       if(ok){ ctx.speak(answer[0]); ctx.next(first); } else first=false;
@@ -684,19 +804,22 @@ games.push({
       const ans = word[miss].toUpperCase();
       const html = word.toUpperCase().split('').map((ch,i)=>i===miss?'<span style="color:#fab005">＿</span>':ch).join('');
       stage.appendChild(el('div','prompt','<div class="emo">'+emo+'</div><div class="big">'+html+'</div><div class="hint">빈칸에 들어갈 글자는?</div>'));
+      ctx.say('그림을 잘 보고, 빈칸에 들어갈 알파벳을 골라 봐!');
+      ctx.speak(word);
       const s = new Set([ans]); while(s.size<3) s.add(AZ[ctx.ri(0,25)]);
       ctx.choiceRow(stage, [...s].map(L=>({label:L,correct:L===ans})), ok=>{
         if(ok){ ctx.speak(word); ctx.next(first); } else first=false;
       });
     } else {
-      const st = ctx.ri(0,22), miss = ctx.ri(1,2);
+      const st = ctx.ri(0,10), miss = ctx.ri(1,2);
       const seq = [AZ[st],AZ[st+1],AZ[st+2],AZ[st+3]];
       const ans = seq[miss];
       const html = seq.map((c,i)=>i===miss?'<span style="color:#fab005">❓</span>':c).join('&nbsp; ');
       stage.appendChild(el('div','prompt','<div class="big">'+html+'</div><div class="hint">❓는 무슨 글자일까?</div>'));
+      ctx.say('알파벳이 순서대로 서 있어. 물음표 자리에 올 글자를 골라 봐!');
       const s = new Set([ans]); while(s.size<3) s.add(AZ[ctx.ri(0,25)]);
       ctx.choiceRow(stage, [...s].map(L=>({label:L,correct:L===ans})), ok=>{
-        if(ok){ ctx.speak(seq.join(' ')); ctx.next(first); } else first=false;
+        if(ok){ ctx.speak(seq.join(', ')); ctx.next(first); } else first=false;
       });
     }
   }
@@ -712,7 +835,8 @@ games.push({
       const letters = word.toUpperCase().split('');
       stage.appendChild(el('div','prompt','<div class="emo">'+emo+'</div><div class="hint">듣고 글자를 순서대로 놓아봐!</div>'));
       stage.appendChild(speakBtn(word, ctx));
-      setTimeout(()=>ctx.speak(word), 400);
+      ctx.say('영어를 잘 듣고, 글자를 순서대로 눌러서 단어를 만들어 봐!');
+      setTimeout(()=>ctx.speak(word), 3000);
       const slots = el('div','slotrow');
       letters.forEach(()=>slots.appendChild(el('div','slot','')));
       stage.appendChild(slots);
@@ -736,6 +860,7 @@ games.push({
     } else {
       const i = ctx.ri(0,25), big = AZ[i], small = big.toLowerCase();
       stage.appendChild(el('div','prompt','<div class="big" style="color:#ff7849">'+big+'</div><div class="hint">짝꿍 작은 글자를 찾아줘!</div>'));
+      ctx.say('큰 글자의 짝꿍인 작은 글자를 찾아 줘!');
       ctx.speak(big);
       const s = new Set([small]); while(s.size<3) s.add(AZ[ctx.ri(0,25)].toLowerCase());
       ctx.choiceRow(stage, [...s].map(L=>({label:L,correct:L===small})), ok=>{ if(ok)ctx.next(first); else first=false; });
@@ -749,13 +874,14 @@ games.push({
   round(stage, ctx){
     let first = true;
     if(ctx.mode==='uni'){
-      const three = pickWords(ctx,5);
-      const answer = three[0];
+      const five = pickWords(ctx,5);
+      const answer = five[0];
       const ans = answer[0][0].toUpperCase();
       stage.appendChild(el('div','prompt','<div class="emo">'+answer[1]+'</div><div class="mid">'+answer[0]+'</div><div class="hint">이 단어는 무슨 글자로 시작할까?</div>'));
+      ctx.say('이 단어가 무슨 글자로 시작하는지 골라 봐!');
       ctx.speak(answer[0]);
       const s = new Set([ans]);
-      for(const w of three.slice(1)){ if(s.size<3 && w[0][0].toUpperCase()!==ans) s.add(w[0][0].toUpperCase()); }
+      for(const w of five.slice(1)){ if(s.size<3 && w[0][0].toUpperCase()!==ans) s.add(w[0][0].toUpperCase()); }
       while(s.size<3) s.add(AZ[ctx.ri(0,25)]);
       ctx.choiceRow(stage, [...s].map(L=>({label:L,correct:L===ans})), ok=>{ if(ok)ctx.next(first); else first=false; });
     } else {
@@ -763,6 +889,7 @@ games.push({
       const keys = Object.keys(lookalike);
       const target = keys[ctx.ri(0,keys.length-1)];
       stage.appendChild(el('div','prompt','<div class="big" style="color:#20c997">'+target+'</div><div class="hint">아래에서 똑같은 글자를 찾아 팡!</div>'));
+      ctx.say('위에 있는 글자랑 똑같은 글자를 아래에서 찾아 봐!');
       ctx.speak(target);
       const opts = ctx.shuffle(lookalike[target]).slice(0,2).concat([target]);
       ctx.choiceRow(stage, opts.map(L=>({label:L,correct:L===target})), ok=>{ if(ok)ctx.next(first); else first=false; });
@@ -770,18 +897,260 @@ games.push({
   }
 });
 
+/* ================= ✋ 드래그 게임 (새로 추가!) ================= */
+
+/* 11. 공 바구니 — 공을 끌어다 넣기 */
+games.push({
+  id:'basket', rounds:6, name:'공 바구니', icon:'🧺', tag:'✋ 끌어서 쏙!', color:'linear-gradient(135deg,#a9e34b,#82c91e)',
+  round(stage, ctx){
+    let need, first = true, done = false, got = 0;
+    if(ctx.mode==='uni'){
+      const a = ctx.ri(1,4), b = ctx.ri(1,5); need = a+b;
+      stage.appendChild(el('div','prompt','<div class="big">'+a+' + '+b+'</div><div class="hint">계산한 만큼 공을 바구니에 끌어다 넣고 [다 넣었어!]를 눌러</div>'));
+      ctx.say(a+' 더하기 '+b+'! 계산한 개수만큼 공을 바구니에 끌어다 넣고, 다 넣었어 버튼을 눌러 줘!');
+    } else {
+      need = ctx.ri(1,4);
+      stage.appendChild(el('div','prompt','<div class="mid">공 <b style="color:#e8590c">'+need+'개</b>를 바구니에!</div><div class="hint">손가락으로 끌어다 넣어줘</div>'));
+      ctx.say('공을 '+need+'개, 바구니에 끌어다 넣어 줘! 같이 세어 보자!');
+    }
+    const dz = el('div','dz','<div class="dzi">🧺</div><div id="bc">0개</div>');
+    stage.appendChild(dz);
+    const row = el('div','dragrow');
+    const total = need + 3;
+    for(let i=0;i<total;i++){
+      const b = el('button','dragitem','⚽');
+      ctx.makeDrag(b, ()=>[dz], (hit, elm)=>{
+        if(done || !hit) return false;
+        got++;
+        elm.dataset.dead = 1; elm.style.visibility = 'hidden';
+        sndPop(); ctx.burstAt(dz); dz.classList.add('glow'); setTimeout(()=>dz.classList.remove('glow'),500);
+        dz.querySelector('#bc').textContent = got+'개';
+        if(ctx.mode==='cho'){
+          speakKo(KO_NUM[got-1]+'!');
+          if(got===need){ done=true; sndGood(); setTimeout(()=>{ speakKo('딱 맞았어! 최고야!'); ctx.next(true); }, 600); }
+          else if(got>need){ done=true; sndWrong(); setTimeout(()=>ctx.next(false), 600); }
+        }
+        return true;
+      });
+      row.appendChild(b);
+    }
+    stage.appendChild(row);
+    if(ctx.mode==='uni'){
+      const chk = el('button','bigbtn bb-green','다 넣었어! ✅');
+      chk.onclick = ()=>{
+        if(done) return; done = true;
+        if(got===need){ sndGood(); ctx.burstAt(dz,true); speakKo('딩동댕! 정답이야!'); ctx.next(first); }
+        else { sndWrong(); speakKo('음, 다시 세어 볼까? '+need+'개를 넣어야 해!'); done=false; first=false; }
+      };
+      stage.appendChild(chk);
+    }
+  }
+});
+
+/* 12. 꿀벌 배달 — 벌을 정답 꽃으로 */
+games.push({
+  id:'bee', name:'꿀벌 배달', icon:'🐝', tag:'✋ 꽃까지 슝~', color:'linear-gradient(135deg,#ffe066,#fcc419)',
+  round(stage, ctx){
+    let ans, first = true, done = false;
+    if(ctx.mode==='uni'){
+      const p = mixedProblem(ctx);
+      ans = p.ans;
+      stage.appendChild(el('div','prompt','<div class="big">'+p.a+' '+p.op+' '+p.b+' = ?</div><div class="hint">꿀벌을 정답 꽃에 데려다줘!</div>'));
+      ctx.say(p.a+' '+p.koOp+' '+p.b+'! 꿀벌을 정답이 적힌 꽃으로 끌어다 줘!');
+    } else {
+      ans = ctx.ri(1,5);
+      const e = ctx.pick(CNT_EMOJI);
+      stage.appendChild(el('div','prompt','<div class="emo">'+e.repeat(ans)+'</div><div class="hint">몇 개? 꿀벌을 그 숫자 꽃으로!</div>'));
+      ctx.say('그림이 몇 개인지 세어 보고, 꿀벌을 그 숫자가 적힌 꽃에 데려다 줘!');
+    }
+    const opts = ctx.mode==='uni' ? nearWrong(ans,ctx) : (()=>{ const s=new Set([ans]); while(s.size<3)s.add(Math.max(1,Math.min(6,ans+ctx.pick([-2,-1,1,2])))); return [...s].map(v=>({label:v,correct:v===ans})); })();
+    const zrow = el('div','dzrow');
+    const zones = [];
+    ctx.shuffle(opts).forEach(o=>{
+      const z = el('div','dz','<div class="dzi">🌸</div><div>'+o.label+'</div>');
+      z.dataset.ok = o.correct ? '1' : '';
+      zones.push(z); zrow.appendChild(z);
+    });
+    stage.appendChild(zrow);
+    const bee = el('button','dragitem','🐝');
+    bee.style.fontSize = '58px';
+    ctx.makeDrag(bee, ()=>zones, (hit, elm)=>{
+      if(done || !hit) return false;
+      if(hit.dataset.ok){
+        done = true;
+        sndPop(); sndGood(); ctx.burstAt(hit, true); hit.classList.add('glow');
+        elm.style.visibility = 'hidden';
+        speakKo('붕붕~ 딩동댕!');
+        ctx.next(first);
+        return true;
+      }
+      sndWrong(); hit.style.opacity = .4; first = false;
+      return false;
+    });
+    stage.appendChild(bee);
+  }
+});
+
+/* 13. 글자 트럭 — 글자를 끌어서 단어 완성 */
+games.push({
+  id:'truck', rounds:8, name:'글자 트럭', icon:'🚚', tag:'✋ 글자를 실어줘!', color:'linear-gradient(135deg,#74c0fc,#5c7cfa)',
+  round(stage, ctx){
+    let first = true;
+    if(ctx.mode==='uni'){
+      const [word, emo] = ctx.pick(WORDS.filter(w=>w[0].length<=4));
+      const letters = word.toUpperCase().split('');
+      stage.appendChild(el('div','prompt','<div class="emo">'+emo+' 🚚</div><div class="hint">글자를 순서대로 트럭에 실어줘!</div>'));
+      ctx.say('글자를 순서대로 트럭에 끌어다 실어서 단어를 완성해 봐!');
+      ctx.speak(word);
+      const slots = el('div','slotrow');
+      letters.forEach(()=>slots.appendChild(el('div','slot','')));
+      const dz = el('div','dz','<div class="dzi">🚚</div>');
+      stage.appendChild(slots);
+      stage.appendChild(dz);
+      let idx = 0;
+      const row = el('div','dragrow');
+      ctx.shuffle(letters.map((l,i)=>({l,k:i}))).forEach(o=>{
+        const t = el('button','dragchip', o.l);
+        ctx.makeDrag(t, ()=>[dz], (hit, elm)=>{
+          if(!hit) return false;
+          if(o.l===letters[idx]){
+            sndPop(); ctx.burstAt(dz);
+            elm.dataset.dead = 1; elm.style.visibility = 'hidden';
+            const sl = slots.children[idx]; sl.textContent = o.l; sl.classList.add('fill');
+            idx++;
+            if(idx===letters.length){ sndGood(); ctx.speak(word); ctx.next(first); }
+            return true;
+          }
+          sndWrong(); first = false;
+          return false;
+        });
+        row.appendChild(t);
+      });
+      stage.appendChild(row);
+    } else {
+      const target = AZ[ctx.ri(0,25)];
+      stage.appendChild(el('div','prompt','<div class="big" style="color:#5c7cfa">'+target+'</div><div class="hint">똑같은 글자를 트럭에 실어줘!</div>'));
+      ctx.say('위에 있는 글자랑 똑같은 글자를 찾아서 트럭에 끌어다 실어 줘!');
+      ctx.speak(target);
+      const dz = el('div','dz','<div class="dzi">🚚</div>');
+      stage.appendChild(dz);
+      const s = new Set([target]); while(s.size<3) s.add(AZ[ctx.ri(0,25)]);
+      const row = el('div','dragrow');
+      let done = false;
+      ctx.shuffle([...s]).forEach(L=>{
+        const t = el('button','dragchip', L);
+        ctx.makeDrag(t, ()=>[dz], (hit, elm)=>{
+          if(done || !hit) return false;
+          if(L===target){
+            done = true;
+            sndPop(); sndGood(); ctx.burstAt(dz, true); dz.classList.add('glow');
+            elm.style.visibility = 'hidden';
+            ctx.next(first);
+            return true;
+          }
+          sndWrong(); first = false;
+          return false;
+        });
+        row.appendChild(t);
+      });
+      stage.appendChild(row);
+    }
+  }
+});
+
+/* 14. 과일 나누기 — 바구니 두 개에 분류 */
+games.push({
+  id:'sort', rounds:6, name:'과일 나누기', icon:'🍎', tag:'✋ 알맞은 바구니로!', color:'linear-gradient(135deg,#ff8787,#fa5252)',
+  round(stage, ctx){
+    let first = true, left = 4;
+    let zA, zB, items;
+    if(ctx.mode==='uni'){
+      stage.appendChild(el('div','prompt','<div class="mid">숫자를 나눠 담아줘!</div><div class="hint">10보다 작으면 왼쪽, 크면 오른쪽</div>'));
+      ctx.say('숫자가 10보다 작으면 왼쪽 바구니에, 10보다 크면 오른쪽 바구니에 끌어다 담아 줘!');
+      zA = el('div','dz','<div class="dzi">🧺</div><div>10보다 작아</div>');
+      zB = el('div','dz','<div class="dzi">🧺</div><div>10보다 커</div>');
+      const nums = [];
+      while(nums.length<4){ const v = Math.random()<0.5?ctx.ri(1,9):ctx.ri(11,30); if(!nums.includes(v)) nums.push(v); }
+      items = nums.map(v=>({label:v, zone:v<10?'A':'B'}));
+    } else {
+      stage.appendChild(el('div','prompt','<div class="mid">같은 과일끼리 모아줘!</div><div class="hint">사과는 사과 바구니로!</div>'));
+      ctx.say('같은 과일끼리 바구니에 모아 줘! 사과는 사과 바구니, 바나나는 바나나 바구니!');
+      zA = el('div','dz','<div class="dzi">🍎</div>');
+      zB = el('div','dz','<div class="dzi">🍌</div>');
+      items = ctx.shuffle([{label:'🍎',zone:'A'},{label:'🍎',zone:'A'},{label:'🍌',zone:'B'},{label:'🍌',zone:'B'}]);
+    }
+    const zrow = el('div','dzrow');
+    zrow.appendChild(zA); zrow.appendChild(zB);
+    stage.appendChild(zrow);
+    const row = el('div','dragrow');
+    ctx.shuffle(items).forEach(it=>{
+      const d = el('button', ctx.mode==='uni'?'dragchip':'dragitem', it.label);
+      ctx.makeDrag(d, ()=>[zA,zB], (hit, elm)=>{
+        if(!hit) return false;
+        const okZone = (hit===zA && it.zone==='A') || (hit===zB && it.zone==='B');
+        if(okZone){
+          sndPop(); ctx.burstAt(hit); hit.classList.add('glow'); setTimeout(()=>hit.classList.remove('glow'),500);
+          elm.dataset.dead = 1; elm.style.visibility = 'hidden';
+          left--;
+          if(left===0){ sndGood(); speakKo('우와, 다 나눴다! 잘했어!'); ctx.next(first); }
+          return true;
+        }
+        sndWrong(); first = false;
+        return false;
+      });
+      row.appendChild(d);
+    });
+    stage.appendChild(row);
+  }
+});
+
+/* 15. 단어 낚시 — 맞는 물고기를 어항으로 */
+games.push({
+  id:'fishing', name:'단어 낚시', icon:'🎣', tag:'✋ 물고기를 잡아!', color:'linear-gradient(135deg,#66d9e8,#15aabf)',
+  round(stage, ctx){
+    let first = true, done = false;
+    let targetLabel, opts;
+    if(ctx.mode==='uni'){
+      const three = pickWords(ctx,3), answer = three[0];
+      stage.appendChild(el('div','prompt','<div class="emo">'+answer[1]+'</div><div class="hint">이 그림의 단어 물고기를 어항에 넣어줘!</div>'));
+      ctx.say('그림에 맞는 영어 단어 물고기를 잡아서 어항에 넣어 줘!');
+      ctx.speak(answer[0]);
+      opts = three.map(w=>({label:'🐠 '+w[0], correct:w===answer, word:w[0]}));
+    } else {
+      const target = AZ[ctx.ri(0,25)];
+      stage.appendChild(el('div','prompt','<div class="big" style="color:#15aabf">'+target+'</div><div class="hint">같은 글자 물고기를 어항에!</div>'));
+      ctx.say('위의 글자랑 똑같은 글자 물고기를 잡아서 어항에 넣어 줘!');
+      ctx.speak(target);
+      const s = new Set([target]); while(s.size<3) s.add(AZ[ctx.ri(0,25)]);
+      opts = [...s].map(L=>({label:'🐠 '+L, correct:L===target, word:L}));
+    }
+    const dz = el('div','dz','<div class="dzi">🪣</div><div>어항</div>');
+    stage.appendChild(dz);
+    const row = el('div','dragrow');
+    ctx.shuffle(opts).forEach(o=>{
+      const f = el('button','dragchip', o.label);
+      ctx.makeDrag(f, ()=>[dz], (hit, elm)=>{
+        if(done || !hit) return false;
+        if(o.correct){
+          done = true;
+          sndPop(); sndGood(); ctx.burstAt(dz, true); dz.classList.add('glow');
+          elm.style.visibility = 'hidden';
+          ctx.speak(o.word);
+          ctx.next(first);
+          return true;
+        }
+        sndWrong(); elm.style.opacity = .4; first = false;
+        return false;
+      });
+      row.appendChild(f);
+    });
+    stage.appendChild(row);
+  }
+});
+
 /* ================= 시작! ================= */
 renderHome();
-// iOS: unlock AudioContext + preload voices on first touch
-document.body.addEventListener('touchstart', ()=>{
-  ac();
-  // warm up speechSynthesis
-  if(typeof speechSynthesis !== 'undefined'){
-    const warm = new SpeechSynthesisUtterance('');
-    speechSynthesis.speak(warm);
-    speechSynthesis.cancel();
-  }
-}, {once:true});
+document.body.addEventListener('touchstart', ()=>ac(), {once:true});
 </script>
 </body>
 </html>
